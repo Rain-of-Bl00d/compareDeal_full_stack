@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { SearchBar } from "./search-bar"
-import { ShoppingCart, User, Menu } from "lucide-react"
+import { Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { CategoryMenu } from "./category-menu"
@@ -31,30 +31,10 @@ export function Navbar() {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-4">
           <CategoryMenu />
-
-          <div className="relative">
-            <Button variant="ghost" size="icon" className="relative" aria-label="Shopping Cart">
-              <ShoppingCart className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-medium text-white">
-                0
-              </span>
-            </Button>
-          </div>
-
-          <Button variant="ghost" size="icon" aria-label="User Account">
-            <User className="h-5 w-5" />
-          </Button>
         </div>
 
         {/* Mobile Menu Button */}
         <div className="md:hidden flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="relative" aria-label="Shopping Cart">
-            <ShoppingCart className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-blue-600 text-[8px] font-medium text-white">
-              0
-            </span>
-          </Button>
-
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" aria-label="Menu">
@@ -69,13 +49,6 @@ export function Navbar() {
 
                 <div className="space-y-4">
                   <CategoryMenu isMobile={true} onItemClick={() => setIsMobileMenuOpen(false)} />
-
-                  <div className="pt-4 border-t">
-                    <Button variant="ghost" className="w-full justify-start" aria-label="User Account">
-                      <User className="h-4 w-4 mr-2" />
-                      Account
-                    </Button>
-                  </div>
                 </div>
               </div>
             </SheetContent>
