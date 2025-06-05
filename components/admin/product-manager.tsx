@@ -67,6 +67,7 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
       }
       setAffiliateLinks(links.length > 0 ? links : [{ platform: "amazon", url: "" }])
     } else {
+      // Reset for new product
       setAffiliateLinks([{ platform: "amazon", url: "" }])
     }
   }, [editingProduct])
@@ -152,11 +153,12 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
 
       if (response.ok) {
         setMessage(editingProduct ? "Product updated successfully!" : "Product created successfully!")
-        setIsDialogOpen(false)
-        setEditingProduct(null)
-        setAffiliateLinks([{ platform: "amazon", url: "" }])
+        handleDialogClose()
         fetchProducts()
         onStatsUpdate?.()
+        // Clear the form
+        const form = e.currentTarget
+        form.reset()
       } else {
         setMessage(data.error || "Operation failed")
       }
@@ -169,6 +171,13 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product)
+    setIsDialogOpen(true)
+  }
+
+  const handleAddProduct = () => {
+    setEditingProduct(null)
+    setAffiliateLinks([{ platform: "amazon", url: "" }])
+    setMessage("")
     setIsDialogOpen(true)
   }
 
@@ -219,6 +228,7 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
     setIsDialogOpen(false)
     setEditingProduct(null)
     setAffiliateLinks([{ platform: "amazon", url: "" }])
+    setMessage("")
   }
 
   return (
@@ -231,9 +241,9 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
 
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Products</h3>
-        <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditingProduct(null)}>
+            <Button onClick={handleAddProduct}>
               <Plus className="mr-2 h-4 w-4" />
               Add Product
             </Button>
@@ -246,11 +256,21 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Product Name</Label>
-                  <Input id="name" name="name" defaultValue={editingProduct?.name} required />
+                  <Input
+                    id="name"
+                    name="name"
+                    key={editingProduct?._id || "new"}
+                    defaultValue={editingProduct?.name || ""}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
-                  <Select name="category" defaultValue={editingProduct?.category}>
+                  <Select
+                    name="category"
+                    key={`category-${editingProduct?._id || "new"}`}
+                    defaultValue={editingProduct?.category || ""}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
@@ -268,7 +288,13 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
 
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
-                <Textarea id="description" name="description" defaultValue={editingProduct?.description} required />
+                <Textarea
+                  id="description"
+                  name="description"
+                  key={`description-${editingProduct?._id || "new"}`}
+                  defaultValue={editingProduct?.description || ""}
+                  required
+                />
               </div>
 
               <div className="space-y-2">
@@ -278,7 +304,8 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
                   name="price"
                   type="number"
                   step="0.01"
-                  defaultValue={editingProduct?.price}
+                  key={`price-${editingProduct?._id || "new"}`}
+                  defaultValue={editingProduct?.price || ""}
                   required
                 />
               </div>
@@ -290,7 +317,8 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
                     id="image"
                     name="image"
                     type="url"
-                    defaultValue={editingProduct?.image}
+                    key={`image-${editingProduct?._id || "new"}`}
+                    defaultValue={editingProduct?.image || ""}
                     placeholder="https://example.com/image.jpg"
                     required
                   />
@@ -319,7 +347,10 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
 
                 <div className="space-y-3">
                   {affiliateLinks.map((link, index) => (
-                    <div key={index} className="flex gap-3 items-start p-3 border rounded-lg bg-gray-50">
+                    <div
+                      key={`${editingProduct?._id || "new"}-${index}`}
+                      className="flex gap-3 items-start p-3 border rounded-lg bg-gray-50"
+                    >
                       <div className="w-32">
                         <Select
                           value={link.platform}
@@ -397,7 +428,7 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
                     />
                   </TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell className="capitalize">{product.category}</TableCell>
+                  <TableCell className="capitalize">{product.category?.replace("-", " ")}</TableCell>
                   <TableCell>₹{product.price.toLocaleString()}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
@@ -411,7 +442,7 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
                         <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Meeshow</span>
                       )}
                       {product.otherLinks?.map((link, index) => (
-                        <span key={index} className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">
+                        <span key={index} className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded capitalize">
                           {link.platform}
                         </span>
                       ))}
