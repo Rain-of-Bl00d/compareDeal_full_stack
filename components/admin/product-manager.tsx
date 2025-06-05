@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Plus, Edit, Trash2, Upload } from "lucide-react"
+import { Plus, Edit, Trash2, Upload, X } from "lucide-react"
 import Image from "next/image"
 
 interface Product {
@@ -25,10 +25,16 @@ interface Product {
   amazonLink?: string
   flipkartLink?: string
   meeshowLink?: string
+  otherLinks?: Array<{ platform: string; url: string }>
 }
 
 interface ProductManagerProps {
   onStatsUpdate?: () => void
+}
+
+interface AffiliateLink {
+  platform: string
+  url: string
 }
 
 export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
@@ -37,10 +43,33 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState("")
+  const [affiliateLinks, setAffiliateLinks] = useState<AffiliateLink[]>([{ platform: "amazon", url: "" }])
 
   useEffect(() => {
     fetchProducts()
   }, [])
+
+  useEffect(() => {
+    if (editingProduct) {
+      // Convert existing product links to the new format
+      const links: AffiliateLink[] = []
+      if (editingProduct.amazonLink) {
+        links.push({ platform: "amazon", url: editingProduct.amazonLink })
+      }
+      if (editingProduct.flipkartLink) {
+        links.push({ platform: "flipkart", url: editingProduct.flipkartLink })
+      }
+      if (editingProduct.meeshowLink) {
+        links.push({ platform: "meeshow", url: editingProduct.meeshowLink })
+      }
+      if (editingProduct.otherLinks) {
+        links.push(...editingProduct.otherLinks)
+      }
+      setAffiliateLinks(links.length > 0 ? links : [{ platform: "amazon", url: "" }])
+    } else {
+      setAffiliateLinks([{ platform: "amazon", url: "" }])
+    }
+  }, [editingProduct])
 
   const fetchProducts = async () => {
     try {
@@ -52,21 +81,61 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
     }
   }
 
+  const addAffiliateLink = () => {
+    setAffiliateLinks([...affiliateLinks, { platform: "amazon", url: "" }])
+  }
+
+  const removeAffiliateLink = (index: number) => {
+    if (affiliateLinks.length > 1) {
+      setAffiliateLinks(affiliateLinks.filter((_, i) => i !== index))
+    }
+  }
+
+  const updateAffiliateLink = (index: number, field: "platform" | "url", value: string) => {
+    const updatedLinks = [...affiliateLinks]
+    updatedLinks[index][field] = value
+    setAffiliateLinks(updatedLinks)
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
     setMessage("")
 
     const formData = new FormData(e.currentTarget)
-    const productData = {
+
+    // Convert affiliate links back to the original format for backward compatibility
+    const productData: any = {
       name: formData.get("name") as string,
       description: formData.get("description") as string,
       price: Number.parseFloat(formData.get("price") as string),
       image: formData.get("image") as string,
       category: formData.get("category") as string,
-      amazonLink: formData.get("amazonLink") as string,
-      flipkartLink: formData.get("flipkartLink") as string,
-      meeshowLink: formData.get("meeshowLink") as string,
+    }
+
+    // Process affiliate links
+    const otherLinks: Array<{ platform: string; url: string }> = []
+
+    affiliateLinks.forEach((link) => {
+      if (link.url.trim()) {
+        switch (link.platform) {
+          case "amazon":
+            productData.amazonLink = link.url
+            break
+          case "flipkart":
+            productData.flipkartLink = link.url
+            break
+          case "meeshow":
+            productData.meeshowLink = link.url
+            break
+          default:
+            otherLinks.push({ platform: link.platform, url: link.url })
+        }
+      }
+    })
+
+    if (otherLinks.length > 0) {
+      productData.otherLinks = otherLinks
     }
 
     try {
@@ -85,9 +154,9 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
         setMessage(editingProduct ? "Product updated successfully!" : "Product created successfully!")
         setIsDialogOpen(false)
         setEditingProduct(null)
+        setAffiliateLinks([{ platform: "amazon", url: "" }])
         fetchProducts()
-        onStatsUpdate?.() // Update stats
-        e.currentTarget.reset()
+        onStatsUpdate?.()
       } else {
         setMessage(data.error || "Operation failed")
       }
@@ -114,7 +183,7 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
       if (response.ok) {
         setMessage("Product deleted successfully!")
         fetchProducts()
-        onStatsUpdate?.() // Update stats
+        onStatsUpdate?.()
       } else {
         setMessage("Failed to delete product")
       }
@@ -138,13 +207,18 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
 
       const data = await response.json()
       if (response.ok) {
-        // Update the image input with the uploaded URL
         const imageInput = document.getElementById("image") as HTMLInputElement
         if (imageInput) imageInput.value = data.url
       }
     } catch (error) {
       console.error("Upload error:", error)
     }
+  }
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false)
+    setEditingProduct(null)
+    setAffiliateLinks([{ platform: "amazon", url: "" }])
   }
 
   return (
@@ -157,7 +231,7 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
 
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Products</h3>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild>
             <Button onClick={() => setEditingProduct(null)}>
               <Plus className="mr-2 h-4 w-4" />
@@ -182,8 +256,11 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="electronics">Electronics</SelectItem>
+                      <SelectItem value="mobile-laptop">Mobile & Laptop</SelectItem>
+                      <SelectItem value="fashion">Fashion</SelectItem>
                       <SelectItem value="grocery">Grocery</SelectItem>
-                      <SelectItem value="medicine">Medicine</SelectItem>
+                      <SelectItem value="skin-care">Skin Care</SelectItem>
+                      <SelectItem value="home-kitchen">Home & Kitchen</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -231,75 +308,55 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
                 </div>
               </div>
 
-              <div className="space-y-4 mt-4">
-                <h3 className="font-medium">Affiliate Links</h3>
+              <div className="space-y-4 mt-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-medium">Affiliate Links</h3>
+                  <Button type="button" onClick={addAffiliateLink} variant="outline" size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Link
+                  </Button>
+                </div>
 
-                <div className="space-y-4">
-                  <div className="flex gap-4 items-start">
-                    <div className="w-32">
-                      <Select defaultValue="amazon" disabled>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Platform" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="amazon">Amazon</SelectItem>
-                        </SelectContent>
-                      </Select>
+                <div className="space-y-3">
+                  {affiliateLinks.map((link, index) => (
+                    <div key={index} className="flex gap-3 items-start p-3 border rounded-lg bg-gray-50">
+                      <div className="w-32">
+                        <Select
+                          value={link.platform}
+                          onValueChange={(value) => updateAffiliateLink(index, "platform", value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Platform" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="amazon">Amazon</SelectItem>
+                            <SelectItem value="flipkart">Flipkart</SelectItem>
+                            <SelectItem value="meeshow">Meeshow</SelectItem>
+                            <SelectItem value="others">Others</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex-1">
+                        <Input
+                          type="url"
+                          placeholder={`Enter ${link.platform} URL...`}
+                          value={link.url}
+                          onChange={(e) => updateAffiliateLink(index, "url", e.target.value)}
+                        />
+                      </div>
+                      {affiliateLinks.length > 1 && (
+                        <Button
+                          type="button"
+                          onClick={() => removeAffiliateLink(index)}
+                          variant="outline"
+                          size="icon"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
-                    <div className="flex-1 space-y-2">
-                      <Input
-                        id="amazonLink"
-                        name="amazonLink"
-                        type="url"
-                        defaultValue={editingProduct?.amazonLink}
-                        placeholder="https://amazon.in/..."
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4 items-start">
-                    <div className="w-32">
-                      <Select defaultValue="flipkart" disabled>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Platform" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="flipkart">Flipkart</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <Input
-                        id="flipkartLink"
-                        name="flipkartLink"
-                        type="url"
-                        defaultValue={editingProduct?.flipkartLink}
-                        placeholder="https://flipkart.com/..."
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4 items-start">
-                    <div className="w-32">
-                      <Select defaultValue="meeshow" disabled>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Platform" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="meeshow">Meeshow</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <Input
-                        id="meeshowLink"
-                        name="meeshowLink"
-                        type="url"
-                        defaultValue={editingProduct?.meeshowLink}
-                        placeholder="https://meeshow.com/..."
-                      />
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
 
@@ -323,6 +380,7 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
+                <TableHead>Links</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -339,8 +397,26 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
                     />
                   </TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.category}</TableCell>
+                  <TableCell className="capitalize">{product.category}</TableCell>
                   <TableCell>₹{product.price.toLocaleString()}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {product.amazonLink && (
+                        <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded">Amazon</span>
+                      )}
+                      {product.flipkartLink && (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">Flipkart</span>
+                      )}
+                      {product.meeshowLink && (
+                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Meeshow</span>
+                      )}
+                      {product.otherLinks?.map((link, index) => (
+                        <span key={index} className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">
+                          {link.platform}
+                        </span>
+                      ))}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" onClick={() => handleEdit(product)}>

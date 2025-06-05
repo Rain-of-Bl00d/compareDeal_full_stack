@@ -14,6 +14,7 @@ interface Product {
   amazonLink?: string
   flipkartLink?: string
   meeshowLink?: string
+  otherLinks?: Array<{ platform: string; url: string }>
 }
 
 interface ProductCardProps {
@@ -26,6 +27,17 @@ export function ProductCard({ product }: ProductCardProps) {
     { name: "Flipkart", url: product.flipkartLink, color: "bg-[#2874F0]" },
     { name: "Meeshow", url: product.meeshowLink, color: "bg-green-500" },
   ].filter((link) => link.url)
+
+  // Add other links
+  if (product.otherLinks) {
+    product.otherLinks.forEach((link) => {
+      buyLinks.push({
+        name: link.platform.charAt(0).toUpperCase() + link.platform.slice(1),
+        url: link.url,
+        color: "bg-gray-600",
+      })
+    })
+  }
 
   return (
     <Card className="h-full flex flex-col overflow-hidden group">
@@ -46,6 +58,11 @@ export function ProductCard({ product }: ProductCardProps) {
               Meeshow
             </Badge>
           )}
+          {product.otherLinks?.map((link, index) => (
+            <Badge key={index} variant="secondary" className="bg-gray-600 text-white hover:bg-gray-600/90">
+              {link.platform.charAt(0).toUpperCase() + link.platform.slice(1)}
+            </Badge>
+          ))}
         </div>
         <div className="aspect-square relative mb-4 overflow-hidden rounded-lg">
           <Image
@@ -56,7 +73,7 @@ export function ProductCard({ product }: ProductCardProps) {
           />
         </div>
         <Badge variant="outline" className="w-fit mb-2 capitalize">
-          {product.category}
+          {product.category.replace("-", " ")}
         </Badge>
         <CardTitle className="text-lg line-clamp-2">{product.name}</CardTitle>
       </CardHeader>
@@ -68,8 +85,8 @@ export function ProductCard({ product }: ProductCardProps) {
 
       <CardFooter className="p-4 pt-0">
         <div className="w-full space-y-2">
-          {buyLinks.map((link) => (
-            <Button key={link.name} asChild className={`w-full ${link.color} hover:opacity-90`} size="sm">
+          {buyLinks.map((link, index) => (
+            <Button key={index} asChild className={`w-full ${link.color} hover:opacity-90`} size="sm">
               <a href={link.url} target="_blank" rel="noopener noreferrer">
                 Buy on {link.name}
                 <ExternalLink className="ml-2 h-4 w-4" />
