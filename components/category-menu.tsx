@@ -49,7 +49,34 @@ const categories = [
   },
 ]
 
-export function CategoryMenu() {
+interface CategoryMenuProps {
+  isMobile?: boolean
+  onItemClick?: () => void
+}
+
+export function CategoryMenu({ isMobile = false, onItemClick }: CategoryMenuProps) {
+  if (isMobile) {
+    return (
+      <div className="space-y-2">
+        <h3 className="font-medium text-sm text-gray-500 uppercase tracking-wide">Categories</h3>
+        {categories.map((category) => (
+          <Link
+            key={category.name}
+            href={category.href}
+            onClick={onItemClick}
+            className="flex items-center p-3 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            {category.icon}
+            <div>
+              <div className="font-medium">{category.name}</div>
+              <div className="text-sm text-gray-500">{category.description}</div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <NavigationMenu>
       <NavigationMenuList>

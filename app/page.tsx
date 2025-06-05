@@ -11,11 +11,11 @@ export default function HomePage() {
 
       <HeroSection />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6 md:py-8 lg:py-12">
         <CategorySection />
 
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold mb-6">Featured Products</h2>
+        <div className="mt-8 md:mt-12 lg:mt-16">
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-4 md:mb-6">Featured Products</h2>
           <Suspense fallback={<div className="text-center py-8">Loading products...</div>}>
             <ProductGrid />
           </Suspense>
