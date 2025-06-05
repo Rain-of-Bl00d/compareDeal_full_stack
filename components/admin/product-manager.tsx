@@ -231,36 +231,75 @@ export function ProductManager({ onStatsUpdate }: ProductManagerProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="amazonLink">Amazon Link (Optional)</Label>
-                  <Input
-                    id="amazonLink"
-                    name="amazonLink"
-                    type="url"
-                    defaultValue={editingProduct?.amazonLink}
-                    placeholder="https://amazon.in/..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="flipkartLink">Flipkart Link (Optional)</Label>
-                  <Input
-                    id="flipkartLink"
-                    name="flipkartLink"
-                    type="url"
-                    defaultValue={editingProduct?.flipkartLink}
-                    placeholder="https://flipkart.com/..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="meeshowLink">Meeshow Link (Optional)</Label>
-                  <Input
-                    id="meeshowLink"
-                    name="meeshowLink"
-                    type="url"
-                    defaultValue={editingProduct?.meeshowLink}
-                    placeholder="https://meeshow.com/..."
-                  />
+              <div className="space-y-4 mt-4">
+                <h3 className="font-medium">Affiliate Links</h3>
+
+                <div className="space-y-4">
+                  <div className="flex gap-4 items-start">
+                    <div className="w-32">
+                      <Select defaultValue="amazon" disabled>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Platform" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="amazon">Amazon</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <Input
+                        id="amazonLink"
+                        name="amazonLink"
+                        type="url"
+                        defaultValue={editingProduct?.amazonLink}
+                        placeholder="https://amazon.in/..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 items-start">
+                    <div className="w-32">
+                      <Select defaultValue="flipkart" disabled>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Platform" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="flipkart">Flipkart</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <Input
+                        id="flipkartLink"
+                        name="flipkartLink"
+                        type="url"
+                        defaultValue={editingProduct?.flipkartLink}
+                        placeholder="https://flipkart.com/..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 items-start">
+                    <div className="w-32">
+                      <Select defaultValue="meeshow" disabled>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Platform" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="meeshow">Meeshow</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <Input
+                        id="meeshowLink"
+                        name="meeshowLink"
+                        type="url"
+                        defaultValue={editingProduct?.meeshowLink}
+                        placeholder="https://meeshow.com/..."
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
